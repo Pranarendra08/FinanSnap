@@ -16,19 +16,27 @@ class TransaksiViewModel(private val transaksiRepository: TransaksiRepository) :
     private val _bulanTahunList = MutableLiveData<List<BulanTahun>>()
     val bulanTahunList: LiveData<List<BulanTahun>> = _bulanTahunList
 
+//    private val bulanTahun = transaksiRepository.getAllAvailableMonthsAndYears()
+
     fun getAllTransaksi(): LiveData<List<Transaksi>> = transaksiRepository.getAllTransaksi()
 
+//    fun loadTransaksiByBulanTahun(bulan: String, tahun: String) {
+//        viewModelScope.launch {
+//            val transaksi = transaksiRepository.getTransaksiByBulanTahun(bulan, tahun)
+//            _transaksiList.postValue(transaksi)
+//        }
+//    }
+
     fun loadTransaksiByBulanTahun(bulan: String, tahun: String) {
-        viewModelScope.launch {
-            val transaksi = transaksiRepository.getTransaksiByBulanTahun(bulan, tahun)
-            _transaksiList.postValue(transaksi)
+        transaksiRepository.getTransaksiByBulanTahun(bulan, tahun) { result ->
+            _transaksiList.postValue(result)
         }
     }
 
     fun loadAllAvailableMonthsAndYears() {
-        viewModelScope.launch {
-            val bulanTahun = transaksiRepository.getAllAvailableMonthsAndYears()
-            _bulanTahunList.postValue(bulanTahun)
+        transaksiRepository.getAllAvailableMonthsAndYears { result ->
+            _bulanTahunList.postValue(result)
         }
     }
+
 }

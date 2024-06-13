@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.finansnap.DatabaseViewModelFactory
+import com.example.finansnap.data.TransaksiRepository
 import com.example.finansnap.database.Transaksi
 import com.example.finansnap.databinding.FragmentHomeBinding
 import com.example.finansnap.ui.detail.DetailActivity
@@ -23,12 +24,9 @@ class HomeFragment : Fragment() {
 
     private val binding get() = _binding!!
 
-//    private lateinit var transaksiViewModel: TransaksiViewModel
-
     private val transaksiViewModel by viewModels<TransaksiViewModel> {
         DatabaseViewModelFactory.getInstanceData(requireActivity())
     }
-//    private lateinit var repository: TransaksiRepository
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,32 +35,6 @@ class HomeFragment : Fragment() {
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
-//        val application = requireActivity().application
-//        val factory = DatabaseViewModelFactory.getInstanceData(requireActivity())
-//        val transaksiViewModel =
-//            ViewModelProvider(this, factory).get(TransaksiViewModel::class.java)
-
-//        transaksiViewModel.loadAllAvailableMonthsAndYears()
-
-        binding.cvBulanTahun.setOnClickListener {
-//            transaksiViewModel.loadAllAvailableMonthsAndYears()
-            showDateSelectionDialog()
-        }
-//        transaksiViewModel.bulanTahunList.observe(viewLifecycleOwner, Observer { bulanTahunList ->
-            // Update UI dengan bulanTahunList
-//            setListTransaksiData(bulanTahunList)
-//            setJumlahPengeluaran(bulanTahunList)
-//            setJumlahPemasukan(bulanTahunList)
-//        })
-
-        // Contoh untuk memuat data bulan Maret 2024
-//        transaksiViewModel.loadTransaksiByBulanTahun("03", "2024")
-
-        // menampilkan daftar transaksi sesuai bulan tahun
-//        transaksiViewModel.transaksiList.observe(viewLifecycleOwner, Observer { transaksiList ->
-            // Update UI dengan transaksiList
-//        })
 
         transaksiViewModel.getAllTransaksi().observe(requireActivity()) {
             setListTransaksiData(it)
@@ -73,15 +45,28 @@ class HomeFragment : Fragment() {
         return root
     }
 
-//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        super.onViewCreated(view, savedInstanceState)
-//        val factory = DatabaseViewModelFactory.getInstanceData(requireActivity())
-//        val transaksiViewModel =
-//            ViewModelProvider(this, factory).get(TransaksiViewModel::class.java)
-//        transaksiViewModel.loadAllAvailableMonthsAndYears()
-//    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        transaksiViewModel.loadAllAvailableMonthsAndYears()
+
+        binding.cvBulanTahun.setOnClickListener {
+            showDateSelectionDialog()
+        }
+
+        transaksiViewModel.transaksiList.observe(viewLifecycleOwner, Observer { transaksiList ->
+            // Update UI dengan transaksiList
+            setListTransaksiData(transaksiList)
+            setJumlahPengeluaran(transaksiList)
+            setJumlahPemasukan(transaksiList)
+        })
+
+//        transaksiViewModel.bulanTahunList.observe(viewLifecycleOwner, Observer { bulanTahunList ->
+//            // Update UI dengan bulanTahunList
+//        })
+    }
 
     private fun showDateSelectionDialog() {
+//        transaksiViewModel.loadAllAvailableMonthsAndYears()
         val bulanTahunList = transaksiViewModel.bulanTahunList.value ?: return
 
         val items = bulanTahunList.map { "${it.bulan}-${it.tahun}" }.toTypedArray()

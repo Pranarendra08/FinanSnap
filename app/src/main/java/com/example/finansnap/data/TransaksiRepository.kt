@@ -55,11 +55,21 @@ class TransaksiRepository(private val transaksiDao: TransaksiDao) { //applicatio
         return transaksiDao.getTransaksiById(transaksiId)
     }
 
-    fun getAllAvailableMonthsAndYears(): List<BulanTahun> {
-        return transaksiDao.getAllAvailableMonthsAndYears()
+    fun getAllAvailableMonthsAndYears(callback: (List<BulanTahun>) -> Unit) {
+        executorService.execute {
+            val result = transaksiDao.getAllAvailableMonthsAndYears()
+            callback(result)
+        }
     }
 
-    fun getTransaksiByBulanTahun(bulan: String, tahun: String): List<Transaksi> {
-        return transaksiDao.getTransaksiByBulanTahun(bulan, tahun)
+//    fun getTransaksiByBulanTahun(bulan: String, tahun: String): List<Transaksi> {
+//        return transaksiDao.getTransaksiByBulanTahun(bulan, tahun)
+//    }
+
+    fun getTransaksiByBulanTahun(bulan: String, tahun: String, callback: (List<Transaksi>) -> Unit) {
+        executorService.execute {
+            val result = transaksiDao.getTransaksiByBulanTahun(bulan, tahun)
+            callback(result)
+        }
     }
 }
