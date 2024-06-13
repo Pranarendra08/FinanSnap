@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">FinanSnap</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+
+
+    <string-array name="data_saran">
+        <item>Tips Alokasi Penghasilan Bulanan dari Kemenkeu</item>
+        <item>Cara Alokasi Gaji Bulanan dari Pegadaian</item>
+        <item>3 Rumus Alokasi Gaji dari Bibit</item>
+        <item>5 Cara Menabung yang Benar dari CIMB Niaga</item>
+        <item>10 Cara Mengatur Gaji Bulanan dengan Cermat agar Bisa Nabung dari OCBC</item>
+    </string-array>
+
+    <string-array name="data_link_saran">
+        <item>https://www.djkn.kemenkeu.go.id/kpknl-metro/baca-artikel/13811/Tips-Alokasi-Penghasilan-Bulanan.html</item>
+        <item>https://sahabat.pegadaian.co.id/artikel/keuangan/alokasi-gaji</item>
+        <item>https://blog.bibit.id/blog-1/3-rumus-alokasi-gaji-yang-bisa-kamu-coba</item>
+        <item>https://www.cimbniaga.co.id/id/inspirasi/perencanaan/cara-menabung-yang-benar-menurut-pakar-keuangan</item>
+        <item>https://www.ocbc.id/id/article/2021/05/07/cara-mengatur-gaji-bulanan</item>
+    </string-array>
+</resources>
