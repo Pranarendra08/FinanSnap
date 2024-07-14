@@ -19,8 +19,8 @@ data class OCRResult(
 	@field:SerializedName("harga")
 	val harga: Int,
 
-	@field:SerializedName("toko")
-	val toko: String,
+	@field:SerializedName("deskripsi")
+	val deskripsi: String,
 
 	@field:SerializedName("tanggal")
 	val tanggal: String

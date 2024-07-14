@@ -1,17 +1,14 @@
 package com.example.finansnap.data
 
-import android.app.Application
 import android.content.Context
 import androidx.lifecycle.LiveData
 import com.example.finansnap.database.Transaksi
 import com.example.finansnap.database.TransaksiDao
 import com.example.finansnap.database.TransaksiRoomDatabase
-import java.util.Date
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class TransaksiRepository(private val transaksiDao: TransaksiDao) { //application: Application
-//    private val mTransaksiDao: TransaksiDao
+class TransaksiRepository(private val transaksiDao: TransaksiDao) {
     private val executorService: ExecutorService = Executors.newSingleThreadExecutor()
 
     companion object {
@@ -30,14 +27,9 @@ class TransaksiRepository(private val transaksiDao: TransaksiDao) { //applicatio
         }
     }
 
-//    init {
-//        val db = TransaksiRoomDatabase.getDatabase(application)
-//        mTransaksiDao = db.transaksiDao()
-//    }
-
     fun getAllTransaksi(): LiveData<List<Transaksi>> = transaksiDao.getAllTransaksi()
 
-//    fun getTransaksiBulanan(tanggal: String): LiveData<List<Transaksi>> = transaksiDao.getTransaksiBulanan(tanggal)
+    val sortedTransaksi: LiveData<List<Transaksi>> = transaksiDao.getTransaksiSortedByDate()
 
     fun insertTransaksi(transaksi: Transaksi) {
         executorService.execute {
@@ -58,18 +50,18 @@ class TransaksiRepository(private val transaksiDao: TransaksiDao) { //applicatio
     fun getAllAvailableMonthsAndYears(callback: (List<BulanTahun>) -> Unit) {
         executorService.execute {
             val result = transaksiDao.getAllAvailableMonthsAndYears()
-            callback(result)
+            val sortedResult = result.sortedWith(compareByDescending<BulanTahun> { it.tahun.toInt() }
+                .thenByDescending { it.bulan.toInt() })
+            callback(sortedResult)
         }
     }
-
-//    fun getTransaksiByBulanTahun(bulan: String, tahun: String): List<Transaksi> {
-//        return transaksiDao.getTransaksiByBulanTahun(bulan, tahun)
-//    }
 
     fun getTransaksiByBulanTahun(bulan: String, tahun: String, callback: (List<Transaksi>) -> Unit) {
         executorService.execute {
             val result = transaksiDao.getTransaksiByBulanTahun(bulan, tahun)
-            callback(result)
+            val sortedResult = result.sortedByDescending { it.tanggal }
+            callback(sortedResult)
         }
     }
+
 }

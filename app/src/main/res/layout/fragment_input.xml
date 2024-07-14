@@ -4,14 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.dashboard.DashboardFragment">
+    tools:context=".ui.input.InputTransaksiFragment">
 
     <Button
         android:id="@+id/btn_pemasukan"
         android:layout_width="150dp"
-        android:layout_height="60dp"
+        android:layout_height="80dp"
         android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/green_income"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:text="Pemasukan"
+        app:cornerRadius="16dp"
         app:layout_constraintBottom_toTopOf="@+id/btn_pengeluaran"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -20,9 +24,15 @@
     <Button
         android:id="@+id/btn_pengeluaran"
         android:layout_width="150dp"
-        android:layout_height="60dp"
+        android:layout_height="80dp"
         android:layout_marginTop="16dp"
+        android:backgroundTint="@color/red_expense"
+        android:paddingLeft="16dp"
+        android:paddingTop="8dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="8dp"
         android:text="Pengeluaran"
+        app:cornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"

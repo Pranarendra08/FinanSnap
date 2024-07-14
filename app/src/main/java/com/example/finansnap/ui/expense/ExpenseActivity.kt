@@ -3,17 +3,13 @@ package com.example.finansnap.ui.expense
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import com.example.finansnap.DatabaseViewModelFactory
 import com.example.finansnap.MainActivity
 import com.example.finansnap.ViewModelFactory
@@ -21,16 +17,13 @@ import com.example.finansnap.api.OCRResult
 import com.example.finansnap.database.Transaksi
 import com.example.finansnap.databinding.ActivityExpenseBinding
 import com.example.finansnap.ui.expense.CameraActivity.Companion.CAMERAX_RESULT
-import com.example.finansnap.ui.home.TransaksiAddDeleteViewModel
-import com.example.finansnap.ui.home.TransaksiViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.finansnap.ui.input.TransaksiAddViewModel
+import com.example.finansnap.util.isDateValid
 
 class ExpenseActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityExpenseBinding
-    private var currentImageUri: Uri? = null
+//    private var currentImageUri: Uri? = null
 
     private val requestPermissionLauncher =
         registerForActivityResult(
@@ -53,7 +46,7 @@ class ExpenseActivity : AppCompatActivity() {
         ViewModelFactory.getInstance(application)
     }
 
-    private val transaksiAddDeleteViewModel by viewModels<TransaksiAddDeleteViewModel> {
+    private val transaksiAddViewModel by viewModels<TransaksiAddViewModel> {
         DatabaseViewModelFactory.getInstanceData(application)
     }
 
@@ -62,55 +55,51 @@ class ExpenseActivity : AppCompatActivity() {
         binding = ActivityExpenseBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        supportActionBar?.hide()
+
         if (!allPermissionsGranted()) {
             requestPermissionLauncher.launch(REQUIRED_PERMISSION)
         }
         binding.btnSnap.setOnClickListener {
             startCameraX()
             expenseViewModel.resultOcr.observe(this){
-                Log.d("resultOcr di btnSnap ", "${it.toko} ${it.harga} ${it.tanggal}")
                 setInputText(it)
             }
-        }
-
-        expenseViewModel.resultOcr.observe(this){
-            Log.d("resultOcr di expense", "${it.toko} ${it.harga} ${it.tanggal}")
-            setInputText(it)
-        }
-
-        expenseViewModel.isLoading.observe(this) {
-            showLoading(it)
         }
 
         binding.cvKategoriExpense.setOnClickListener{
             showDropdownDialog(this)
         }
 
-        // save data edittext ke database
-//        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
         binding.btnSelesaiPengeluaran.setOnClickListener {
             var isEmpty = false
             if (binding.editTextNumber.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.editTextNumber.error = "Isi total"//getString(R.string.isi_berat)
+                binding.editTextNumber.error = "Isi total"
             }
             if (binding.editTextDate.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.editTextDate.error = "Isi tanggal"//getString(R.string.isi_tinggi)
+                binding.editTextDate.error = "Isi tanggal"
+            }
+            if (!isDateValid(binding.editTextDate.text.toString(), "dd-MM-yyyy")) {
+                isEmpty = true
+                binding.editTextDate.error = "Format dd-MM-yyyy"
             }
             if (binding.tvKategoriExpense.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.tvKategoriExpense.error = "Isi kategori"//getString(R.string.isi_berat)
+                binding.tvKategoriExpense.error = "Isi kategori"
             }
             if (binding.editTextText.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.editTextText.error = "Isi deskripsi"//getString(R.string.isi_tinggi)
+                binding.editTextText.error = "Isi deskripsi"
             }
             if (!isEmpty) {
                 val total = binding.editTextNumber.text.toString()
                 val tanggal = binding.editTextDate.text.toString()
-                val kategori = binding.tvKategoriExpense.text.toString()
+                var kategori = binding.tvKategoriExpense.text.toString()
+                if (kategori == "Pilih Kategori") {
+                    kategori = "Lain-lain"
+                }
                 val deskripsi = binding.editTextText.text.toString()
                 val transaksiEntity = Transaksi(
                     kategori = kategori,
@@ -119,20 +108,19 @@ class ExpenseActivity : AppCompatActivity() {
                     deskripsi = deskripsi,
                     tanggal = tanggal
                 )
-                transaksiAddDeleteViewModel.insertTransaksi(transaksiEntity)
+                transaksiAddViewModel.insertTransaksi(transaksiEntity)
                 startActivity(Intent(this@ExpenseActivity, MainActivity::class.java))
                 finishAffinity()
             }
         }
+
+        binding.btnBackExpense.setOnClickListener {
+            onBackPressed()
+        }
     }
 
     private fun setInputText(ocrResult: OCRResult?) {
-//        binding.editTextText.setText(it.toko)
-//        binding.editTextDate.setText(it.tanggal)
-//        binding.editTextNumber.setText(it.harga)
-        Log.d("setInputText", "fungsi setInputText terpanggil")
-
-        ocrResult?.toko?.let {binding.editTextText.setText(it) }
+        ocrResult?.deskripsi?.let {binding.editTextText.setText(it) }
         ocrResult?.tanggal?.let { binding.editTextDate.setText(it) }
         ocrResult?.harga?.let { binding.editTextNumber.setText(it) }
     }
@@ -146,62 +134,50 @@ class ExpenseActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) {
         if (it.resultCode == CAMERAX_RESULT) {
-            currentImageUri = it.data?.getStringExtra(CameraActivity.EXTRA_CAMERAX_IMAGE)?.toUri()
-            imageOCR()
+//            currentImageUri = it.data?.getStringExtra(CameraActivity.EXTRA_CAMERAX_IMAGE)?.toUri()
 
             binding.editTextText.setText(it.data?.getStringExtra(CameraActivity.EXTRA_OCR_TOKO))
             binding.editTextDate.setText(it.data?.getStringExtra(CameraActivity.EXTRA_OCR_TANGGAL))
             binding.editTextNumber.setText(it.data?.getStringExtra(CameraActivity.EXTRA_OCR_TOTAL))
             expenseViewModel.resultOcr.observe(this){ ocrResult ->
-                Log.d("resultOcr di launcherIntentCameraX", "${ocrResult.toko} ${ocrResult.harga} ${ocrResult.tanggal}")
                 setInputText(ocrResult)
             }
         }
     }
 
-    private fun imageOCR() {
-        currentImageUri?.let {
-            Log.d("Image URI", "showImage: $it")
-            binding.previewImageView.setImageURI(it)
-//            var hasilOcr = expenseViewModel.resultOcr//.observe(this){ ocrResult ->
-//                Log.d("resultOcr di imageOCR", "${ocrResult.toko} ${ocrResult.harga} ${ocrResult.tanggal}")
-//                setInputText(ocrResult)
-//            binding.editTextText.setText(hasilOcr.value!!.toko)
-//            binding.editTextDate.setText(hasilOcr.value!!.tanggal)
-//            binding.editTextNumber.setText(hasilOcr.value!!.harga)
-
-        }
-    }
-
-    fun showDropdownDialog(context: Context) {
+    private fun showDropdownDialog(context: Context) {
         val items = listOf(
-            DropdownItem("Transportasi"),
-            DropdownItem("Makanan"),
-            DropdownItem("Belanja"),
+            DropdownItem("Kebutuhan Primer"),
             DropdownItem("Pakaian"),
+            DropdownItem("Makanan"),
+            DropdownItem("Rumah"),
             DropdownItem("Kesehatan"),
+            DropdownItem("Pendidikan"),
+            DropdownItem("Kebutuhan Sekunder"),
+            DropdownItem("Belanja"),
+            DropdownItem("Transportasi"),
             DropdownItem("Listrik"),
             DropdownItem("Internet"),
-            DropdownItem("Pajak"),
             DropdownItem("Hiburan"),
+            DropdownItem("Kebutuhan Tersier"),
+            DropdownItem("Perhiasan"),
+            DropdownItem("Kendaraan"),
+            DropdownItem("Wisata"),
+            DropdownItem("Pajak"),
+            DropdownItem("Hutang"),
             DropdownItem("Lain-lain")
         )
 
         val adapter = DropdownAdapter(context, items)
 
         AlertDialog.Builder(context)
-            .setTitle("Select an Item")
+            .setTitle("Pilih Kategori Pengeluaranmu")
             .setAdapter(adapter) { dialog, which ->
                 val selectedItem = items[which]
                 binding.tvKategoriExpense.text = selectedItem.text
-//                Toast.makeText(context, "Selected: ${selectedItem.text}", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()
-    }
-
-    private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     companion object {

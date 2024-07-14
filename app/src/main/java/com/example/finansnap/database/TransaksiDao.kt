@@ -16,10 +16,13 @@ interface TransaksiDao {
     @Delete
     fun delete(transaksi: Transaksi)
 
-    @Query("SELECT * from transaksi ORDER BY id ASC")
+    @Query("SELECT * from Transaksi ORDER BY id ASC")
     fun getAllTransaksi(): LiveData<List<Transaksi>>
 
-    @Query("SELECT * FROM transaksi WHERE tanggal = :tanggal")
+    @Query("SELECT * FROM Transaksi ORDER BY date(tanggal) ASC")
+    fun getTransaksiSortedByDate(): LiveData<List<Transaksi>>
+
+    @Query("SELECT * FROM Transaksi WHERE tanggal = :tanggal")
     fun getTransaksiBulanan(tanggal: String): LiveData<List<Transaksi>>
 
     @Query("SELECT DISTINCT substr(tanggal, 4, 2) AS bulan, substr(tanggal, 7, 4) AS tahun FROM Transaksi")
@@ -28,6 +31,8 @@ interface TransaksiDao {
     @Query("SELECT * FROM Transaksi WHERE substr(tanggal, 4, 2) = :bulan AND substr(tanggal, 7, 4) = :tahun")
     fun getTransaksiByBulanTahun(bulan: String, tahun: String): List<Transaksi>
 
-    @Query("SELECT * FROM transaksi WHERE id = :transaksiId")
+    @Query("SELECT * FROM Transaksi WHERE id = :transaksiId")
     fun getTransaksiById(transaksiId: Int): LiveData<Transaksi>
+
+
 }

@@ -12,12 +12,12 @@ object ApiConfig {
             HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
         val client = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(60, TimeUnit.SECONDS) // waktu timeout koneksi
-            .writeTimeout(60, TimeUnit.SECONDS)  // waktu timeout penulisan
-            .readTimeout(60, TimeUnit.SECONDS)   // waktu timeout pembacaan
+            .connectTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
             .build()
         val retrofit = Retrofit.Builder()
-            .baseUrl(" https://354f-114-124-212-2.ngrok-free.app") //link ngrok
+            .baseUrl("https://2c08-2001-448a-2082-ae16-acee-b959-e237-76e7.ngrok-free.app") //link ngrok
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()

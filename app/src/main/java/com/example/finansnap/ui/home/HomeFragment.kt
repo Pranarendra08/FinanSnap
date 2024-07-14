@@ -2,27 +2,27 @@ package com.example.finansnap.ui.home
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.finansnap.DatabaseViewModelFactory
-import com.example.finansnap.data.TransaksiRepository
 import com.example.finansnap.database.Transaksi
 import com.example.finansnap.databinding.FragmentHomeBinding
 import com.example.finansnap.ui.detail.DetailActivity
+import com.example.finansnap.util.withCurrencyFormat
+import com.example.finansnap.util.withFilterDateFormat
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
 
     private val binding get() = _binding!!
+
+    private val adapter = TransaksiAdapter(listOf())
 
     private val transaksiViewModel by viewModels<TransaksiViewModel> {
         DatabaseViewModelFactory.getInstanceData(requireActivity())
@@ -36,8 +36,20 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        transaksiViewModel.loadAllAvailableMonthsAndYears()
+
+        binding.cvBulanTahun.setOnClickListener {
+            showDateSelectionDialog()
+        }
+
+        transaksiViewModel.transaksiList.observe(viewLifecycleOwner) { transaksiList ->
+            setListTransaksiData(transaksiList)
+            setJumlahPengeluaran(transaksiList)
+            setJumlahPemasukan(transaksiList)
+        }
+
         transaksiViewModel.getAllTransaksi().observe(requireActivity()) {
-            setListTransaksiData(it)
+            setListTransaksi()
             setJumlahPengeluaran(it)
             setJumlahPemasukan(it)
         }
@@ -45,37 +57,35 @@ class HomeFragment : Fragment() {
         return root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        transaksiViewModel.loadAllAvailableMonthsAndYears()
-
-        binding.cvBulanTahun.setOnClickListener {
-            showDateSelectionDialog()
+    private fun setListTransaksi() {
+        binding.rvTransaksi.adapter = adapter
+        binding.rvTransaksi.layoutManager = LinearLayoutManager(requireActivity())
+        transaksiViewModel.sortedTransaksi.observe(viewLifecycleOwner) { transaksiList ->
+            transaksiList?.let {
+                adapter.updateData(it)
+            }
         }
-
-        transaksiViewModel.transaksiList.observe(viewLifecycleOwner, Observer { transaksiList ->
-            // Update UI dengan transaksiList
-            setListTransaksiData(transaksiList)
-            setJumlahPengeluaran(transaksiList)
-            setJumlahPemasukan(transaksiList)
+        adapter.setOnItemClickCallback(object : TransaksiAdapter.OnItemClickCallback {
+            override fun onItemClicked(data: Transaksi) {
+                startActivity(
+                    Intent(requireActivity(), DetailActivity::class.java)
+                        .putExtra(DetailActivity.ID, data.id)
+                )
+            }
         })
-
-//        transaksiViewModel.bulanTahunList.observe(viewLifecycleOwner, Observer { bulanTahunList ->
-//            // Update UI dengan bulanTahunList
-//        })
     }
 
     private fun showDateSelectionDialog() {
-//        transaksiViewModel.loadAllAvailableMonthsAndYears()
         val bulanTahunList = transaksiViewModel.bulanTahunList.value ?: return
 
-        val items = bulanTahunList.map { "${it.bulan}-${it.tahun}" }.toTypedArray()
+        val items = bulanTahunList.map { "${it.bulan}-${it.tahun}".withFilterDateFormat() }.toTypedArray()
 
         AlertDialog.Builder(requireContext())
             .setTitle("Pilih Bulan dan Tahun")
-            .setItems(items) { dialog, which ->
+            .setItems(items) { _, which ->
                 val selected = items[which]
-                val (bulan, tahun) = selected.split("-")
+                val (bulan, tahun) = bulanTahunList[which].let { it.bulan to it.tahun }//selected.split("-")
+                binding.tvBulanTahun.text = selected
                 transaksiViewModel.loadTransaksiByBulanTahun(bulan, tahun)
             }
             .show()
@@ -84,35 +94,23 @@ class HomeFragment : Fragment() {
     private fun setJumlahPengeluaran(dataTransaksi: List<Transaksi>?) {
         var jumlah = 0
         val pengeluaranTransaksi = dataTransaksi?.filter { it.tipe == "Pengeluaran" } ?: emptyList()
-        pengeluaranTransaksi?.forEach { transaksi ->
-//            val tipe = transaksi.tipe
-//            val tipeInt = tipe.toInt()
+        pengeluaranTransaksi.forEach { transaksi ->
             jumlah += transaksi.total
-
-            Log.d("JUMLAH Pengeluaran", "Pengeluaran : $jumlah")
-            // Lakukan sesuatu dengan nilai 'tipe'
-//            println(tipe)  // Contoh output ke konsol
         }
-        binding.tvJumlahPengeluran.text = jumlah.toString()
+        binding.tvJumlahPengeluran.text = jumlah.toString().withCurrencyFormat()
     }
 
     private fun setJumlahPemasukan(dataTransaksi: List<Transaksi>?) {
         var jumlah = 0
         val pemasukanTransaksi = dataTransaksi?.filter { it.tipe == "Pemasukan" } ?: emptyList()
-        pemasukanTransaksi?.forEach { transaksi ->
-//            val tipe = transaksi.tipe
-//            val tipeInt = tipe.toInt()
+        pemasukanTransaksi.forEach { transaksi ->
             jumlah += transaksi.total
 
-            Log.d("JUMLAH Pemasukan", "Pemasukan : $jumlah")
-            // Lakukan sesuatu dengan nilai 'tipe'
-//            println(tipe)  // Contoh output ke konsol
         }
-        binding.tvJumlahPemasukan.text = jumlah.toString()
+        binding.tvJumlahPemasukan.text = jumlah.toString().withCurrencyFormat()
     }
 
     private fun setListTransaksiData(dataTransaksi: List<Transaksi>?) {
-        //set listnya harus sesuai bulan dan tahun yg ada di cv_bulan_tahun
         val adapter = TransaksiAdapter(dataTransaksi!!)
         binding.rvTransaksi.layoutManager = LinearLayoutManager(requireActivity())
         binding.rvTransaksi.setHasFixedSize(true)
@@ -120,8 +118,6 @@ class HomeFragment : Fragment() {
 
         adapter.setOnItemClickCallback(object : TransaksiAdapter.OnItemClickCallback {
             override fun onItemClicked(data: Transaksi) {
-
-                Log.i("ID TRANSAKSI ONCLICK","ID Transaksi : ${data.id}")
                 startActivity(
                     Intent(requireActivity(), DetailActivity::class.java)
                         .putExtra(DetailActivity.ID, data.id)

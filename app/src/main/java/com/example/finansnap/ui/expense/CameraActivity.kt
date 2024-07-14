@@ -106,12 +106,11 @@ class CameraActivity : AppCompatActivity() {
                         showLoading(it)
                         if (!it) {
                             expenseViewModel.resultOcr.observe(this@CameraActivity){ ocrResult ->
-                                Log.d("resultOcr di CameraActivity ", "${ocrResult.toko} ${ocrResult.harga} ${ocrResult.tanggal}")
                                 val intent = Intent()
                                 intent.putExtra(EXTRA_CAMERAX_IMAGE, output.savedUri.toString())
                                 intent.putExtra(EXTRA_OCR_TANGGAL, ocrResult.tanggal)
                                 intent.putExtra(EXTRA_OCR_TOTAL, ocrResult.harga.toString())
-                                intent.putExtra(EXTRA_OCR_TOKO, ocrResult.toko)
+                                intent.putExtra(EXTRA_OCR_TOKO, ocrResult.deskripsi)
                                 setResult(CAMERAX_RESULT, intent)
                                 finish()
                             }
@@ -146,28 +145,8 @@ class CameraActivity : AppCompatActivity() {
         supportActionBar?.hide()
     }
 
-//    private val orientationEventListener by lazy {
-//        object : OrientationEventListener(this) {
-//            override fun onOrientationChanged(orientation: Int) {
-//                if (orientation == ORIENTATION_UNKNOWN) {
-//                    return
-//                }
-//
-//                val rotation = when (orientation) {
-//                    in 45 until 135 -> Surface.ROTATION_270
-//                    in 135 until 225 -> Surface.ROTATION_180
-//                    in 225 until 315 -> Surface.ROTATION_90
-//                    else -> Surface.ROTATION_0
-//                }
-//
-//                imageCapture?.targetRotation = rotation
-//            }
-//        }
-//    }
-
     private fun toggleFlashMode() {
-        val currentMode = imageCapture!!.flashMode
-        val newMode = when (currentMode) {
+        val newMode = when (imageCapture!!.flashMode) {
             ImageCapture.FLASH_MODE_ON -> ImageCapture.FLASH_MODE_OFF
             ImageCapture.FLASH_MODE_OFF -> ImageCapture.FLASH_MODE_AUTO
             ImageCapture.FLASH_MODE_AUTO -> ImageCapture.FLASH_MODE_ON
@@ -182,16 +161,6 @@ class CameraActivity : AppCompatActivity() {
             else -> "Flash: AUTO"
         }
     }
-
-//    override fun onStart() {
-//        super.onStart()
-//        orientationEventListener.enable()
-//    }
-
-//    override fun onStop() {
-//        super.onStop()
-//        orientationEventListener.disable()
-//    }
 
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE

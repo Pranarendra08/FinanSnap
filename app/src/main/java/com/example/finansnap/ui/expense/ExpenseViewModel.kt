@@ -19,7 +19,7 @@ import java.io.File
 
 class ExpenseViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
-        val TAG = "ExpenseViewModel"
+        const val TAG = "ExpenseViewModel"
     }
 
     private val _resultOcr = MutableLiveData<OCRResult>()
@@ -48,9 +48,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                     _isLoading.value = false
                     val responseBody = response.body()
                     if (responseBody != null && !responseBody.error) {
-                        Log.d("Hasil OCR", "${responseBody.ocrResult}")
                         _resultOcr.value = responseBody.ocrResult
-                        Log.d("isi _resultOcr", "${_resultOcr.value}")
                     }
                 } else {
                     _isLoading.value = false
@@ -64,22 +62,5 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                 Log.e(TAG, "onFailure: ${t.message}")
             }
         })
-    }
-
-    private fun handleResponse(response: Response<ResponseOCR>) {
-        _isLoading.value = false
-        if (response.isSuccessful) {
-            val responseBody = response.body()
-            if (responseBody != null && !responseBody.error) {
-                Log.d("Hasil OCR", "${responseBody.ocrResult}")
-                _resultOcr.value = responseBody.ocrResult
-                Log.d("isi _resultOcr", "${_resultOcr.value}")
-            } else {
-                Log.e(TAG, "Error: ${responseBody?.message}")
-            }
-        } else {
-            val errorBody = response.errorBody()?.string()
-            Log.e(TAG, "$errorBody")
-        }
     }
 }

@@ -8,20 +8,19 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import com.example.finansnap.DatabaseViewModelFactory
 import com.example.finansnap.MainActivity
-import com.example.finansnap.R
 import com.example.finansnap.database.Transaksi
-import com.example.finansnap.databinding.ActivityExpenseBinding
 import com.example.finansnap.databinding.ActivityIncomeBinding
 import com.example.finansnap.ui.expense.DropdownAdapter
 import com.example.finansnap.ui.expense.DropdownItem
-import com.example.finansnap.ui.home.TransaksiAddDeleteViewModel
+import com.example.finansnap.ui.input.TransaksiAddViewModel
+import com.example.finansnap.util.isDateValid
 
 class IncomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityIncomeBinding
 
 
-    private val transaksiAddDeleteViewModel by viewModels<TransaksiAddDeleteViewModel> {
+    private val transaksiAddViewModel by viewModels<TransaksiAddViewModel> {
         DatabaseViewModelFactory.getInstanceData(application)
     }
 
@@ -29,6 +28,8 @@ class IncomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityIncomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        supportActionBar?.hide()
 
         binding.cvKategoriPemasukan.setOnClickListener{
             showDropdownDialog(this)
@@ -38,24 +39,31 @@ class IncomeActivity : AppCompatActivity() {
             var isEmpty = false
             if (binding.etJumlahPemasukan.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.etJumlahPemasukan.error = "Isi total"//getString(R.string.isi_berat)
+                binding.etJumlahPemasukan.error = "Isi total"
             }
             if (binding.etTanggalPemasukan.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.etTanggalPemasukan.error = "Isi tanggal"//getString(R.string.isi_tinggi)
+                binding.etTanggalPemasukan.error = "Isi tanggal"
+            }
+            if (!isDateValid(binding.etTanggalPemasukan.text.toString(), "dd-MM-yyyy")) {
+                isEmpty = true
+                binding.etTanggalPemasukan.error = "Format dd-MM-yyyy"
             }
             if (binding.tvKategoriPemasukan.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.tvKategoriPemasukan.error = "Isi kategori"//getString(R.string.isi_berat)
+                binding.tvKategoriPemasukan.error = "Isi kategori"
             }
             if (binding.etCatatanPemasukan.text.trim().contentEquals("")) {
                 isEmpty = true
-                binding.etCatatanPemasukan.error = "Isi deskripsi"//getString(R.string.isi_tinggi)
+                binding.etCatatanPemasukan.error = "Isi deskripsi"
             }
             if (!isEmpty) {
                 val total = binding.etJumlahPemasukan.text.toString()
                 val tanggal = binding.etTanggalPemasukan.text.toString()
-                val kategori = binding.tvKategoriPemasukan.text.toString()
+                var kategori = binding.tvKategoriPemasukan.text.toString()
+                if (kategori == "Pilih Kategori") {
+                    kategori = "Lain-lain"
+                }
                 val deskripsi = binding.etCatatanPemasukan.text.toString()
                 val transaksiEntity = Transaksi(
                     kategori = kategori,
@@ -64,18 +72,22 @@ class IncomeActivity : AppCompatActivity() {
                     deskripsi = deskripsi,
                     tanggal = tanggal
                 )
-                transaksiAddDeleteViewModel.insertTransaksi(transaksiEntity)
+                transaksiAddViewModel.insertTransaksi(transaksiEntity)
                 startActivity(Intent(this@IncomeActivity, MainActivity::class.java))
                 finishAffinity()
             }
         }
+
+        binding.btnBackIncome.setOnClickListener {
+            onBackPressed()
+        }
     }
 
-    fun showDropdownDialog(context: Context) {
+    private fun showDropdownDialog(context: Context) {
         val items = listOf(
+            DropdownItem("Gaji"),
             DropdownItem("Bisnis"),
             DropdownItem("Penyewaan"),
-            DropdownItem("gaji"),
             DropdownItem("Bunga"),
             DropdownItem("Deviden"),
             DropdownItem("Tunjangan"),
@@ -87,7 +99,7 @@ class IncomeActivity : AppCompatActivity() {
         val adapter = DropdownAdapter(context, items)
 
         AlertDialog.Builder(context)
-            .setTitle("Select an Item")
+            .setTitle("Pilih Kategori Pemasukanmu")
             .setAdapter(adapter) { dialog, which ->
                 val selectedItem = items[which]
                 binding.tvKategoriPemasukan.text = selectedItem.text
